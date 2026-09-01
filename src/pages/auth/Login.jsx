@@ -10,7 +10,8 @@ import {
   Zap,
   PackageCheck,
   FileCheck2,
-  Landmark
+  Landmark,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -22,19 +23,59 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [invalidNotice, setInvalidNotice] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const getAuthErrorMessage = (err) => {
+    const code = err.code || '';
+    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+      return 'Invalid email or password. Please verify your credentials.';
+    }
+    if (code === 'auth/invalid-email') {
+      return 'Please enter a valid email address.';
+    }
+    if (code === 'auth/user-disabled') {
+      return 'This account has been disabled. Please contact your administrator.';
+    }
+    if (code === 'auth/too-many-requests') {
+      return 'Too many failed login attempts. Please wait a moment before trying again.';
+    }
+    if (code === 'auth/network-request-failed') {
+      return 'Network error. Please check your internet connection.';
+    }
+    return err.message || 'Authentication failed. Please try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setInvalidNotice('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       toast.success('Welcome back to Coreventory');
       navigate('/');
     } catch (error) {
-      console.error(error);
-      toast.error(error.message || 'Authentication failed');
+      console.error('Login error:', error);
+      const code = error.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        const msg = 'Invalid email or password. Please check your credentials.';
+        setInvalidNotice(msg);
+        toast(msg, {
+          icon: '⚠️',
+          id: 'auth-invalid',
+          style: {
+            borderRadius: '10px',
+            background: '#18181b',
+            color: '#fafafa',
+            fontSize: '12px',
+          },
+        });
+      } else {
+        const msg = getAuthErrorMessage(error);
+        setInvalidNotice(msg);
+        toast.error(msg, { id: 'auth-error' });
+      }
     } finally {
       setLoading(false);
     }
@@ -138,6 +179,14 @@ const Login = () => {
               </span>
             </div>
 
+            {/* Invalid Credentials Notification Banner */}
+            {invalidNotice && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 rounded-xl flex items-center gap-2.5 text-xs text-amber-800 dark:text-amber-300 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>{invalidNotice}</span>
+              </div>
+            )}
+
             {/* Auth Form */}
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
@@ -150,7 +199,10 @@ const Login = () => {
                     type="email" 
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (invalidNotice) setInvalidNotice('');
+                    }}
                     placeholder="admin@example.com"
                     className="input-field pl-9 font-medium"
                   />
@@ -167,7 +219,10 @@ const Login = () => {
                     type="password" 
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (invalidNotice) setInvalidNotice('');
+                    }}
                     placeholder="••••••••"
                     className="input-field pl-9"
                   />
