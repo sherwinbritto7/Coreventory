@@ -152,12 +152,12 @@ npm run build
 
 ---
 
-## 🪄 1-Click Sample Data
+## 🪄 1-Click Sample Data *(Demo Administrator Only)*
 
-Coreventory includes an integrated **1-Click Mock Data Loader** designed for instant evaluation and demo presentations:
+Coreventory includes an integrated **1-Click Mock Data Loader** designed for instant evaluation and demo presentations. To protect production operational records from accidental overwrites, this tool is restricted exclusively to the authorized demo account (`kakashigod777@gmail.com`):
 
-1. Log into your account.
-2. Click the **"Fill Mock Data"** button on the top right of the **Dashboard** (or go to **Settings > Backup & Restore**).
+1. Log into the platform using `kakashigod777@gmail.com`.
+2. Click the **"Fill Mock Data"** button on the top right of the **Dashboard** (or navigate to **Settings > Backup & Restore**).
 3. The platform automatically seeds **15 Firestore collections** with realistic Indian wholesale/retail business data:
    - 8 Products (with HSN codes, batches, serials, and low-stock alerts)
    - 4 Customers with GSTINs and party balances

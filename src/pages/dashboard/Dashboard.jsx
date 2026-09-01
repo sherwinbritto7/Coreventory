@@ -48,7 +48,7 @@ import {
 import toast from "react-hot-toast";
 
 const Dashboard = () => {
-  const { companyId } = useAuth();
+  const { user, companyId } = useAuth();
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalExpenses: 0,
@@ -251,25 +251,27 @@ const Dashboard = () => {
             </select>
           </div>
 
-          <button 
-            onClick={async () => {
-              if (!window.confirm('Populate rich sample business dataset in your current account?')) return;
-              try {
-                toast.loading('Filling mock data...', { id: 'mock-load' });
-                await seedMockData(companyId, 'Apex Retail & Traders');
-                toast.success('Sample business data filled!', { id: 'mock-load' });
-                setTimeout(() => window.location.reload(), 1000);
-              } catch (err) {
-                console.error(err);
-                toast.error('Failed to fill mock data', { id: 'mock-load' });
-              }
-            }}
-            className="btn-primary flex items-center gap-1.5"
-            title="Populate complete sample business dataset"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Fill Mock Data</span>
-          </button>
+          {user?.email === 'kakashigod777@gmail.com' && (
+            <button 
+              onClick={async () => {
+                if (!window.confirm('Populate rich sample business dataset in your current account?')) return;
+                try {
+                  toast.loading('Filling mock data...', { id: 'mock-load' });
+                  await seedMockData(companyId, 'Apex Retail & Traders');
+                  toast.success('Sample business data filled!', { id: 'mock-load' });
+                  setTimeout(() => window.location.reload(), 1000);
+                } catch (err) {
+                  console.error(err);
+                  toast.error('Failed to fill mock data', { id: 'mock-load' });
+                }
+              }}
+              className="btn-primary flex items-center gap-1.5"
+              title="Populate complete sample business dataset"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Fill Mock Data</span>
+            </button>
+          )}
 
           <button 
             onClick={() => window.print()}

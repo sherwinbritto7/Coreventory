@@ -29,7 +29,7 @@ import { seedMockData } from '../../utils/mockDataLoader';
 import { Sparkles } from 'lucide-react';
 
 const Settings = () => {
-  const { companyId } = useAuth();
+  const { user, companyId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'tax_bank', 'backup', 'users'
@@ -502,44 +502,46 @@ const Settings = () => {
       {activeTab === 'backup' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
           
-          {/* Seed Sample Data Card */}
-          <div className="card space-y-4 p-6 border-2 border-emerald-500/20 bg-emerald-50/10 dark:bg-emerald-950/10">
-            <div className="flex items-center gap-3">
-              <span className="p-3 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl">
-                <Sparkles className="w-6 h-6" />
-              </span>
-              <div>
-                <h3 className="font-black text-slate-900 dark:text-white text-base">Fill Sample Data</h3>
-                <p className="text-xs text-slate-500">Populate realistic products, invoices, parties & ledgers</p>
+          {/* Seed Sample Data Card (Restricted to Demo Admin) */}
+          {user?.email === 'kakashigod777@gmail.com' && (
+            <div className="card space-y-4 p-6 border-2 border-emerald-500/20 bg-emerald-50/10 dark:bg-emerald-950/10">
+              <div className="flex items-center gap-3">
+                <span className="p-3 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-2xl">
+                  <Sparkles className="w-6 h-6" />
+                </span>
+                <div>
+                  <h3 className="font-black text-slate-900 dark:text-white text-base">Fill Sample Data</h3>
+                  <p className="text-xs text-slate-500">Populate realistic products, invoices, parties & ledgers</p>
+                </div>
               </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Instantly fill your account with demo products, sales, purchases, bank accounts, expenses, godowns, and orders to test all features.
+              </p>
+
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Populate rich sample business dataset in your current company account?')) return;
+                  try {
+                    setBackupLoading(true);
+                    await seedMockData(companyId, profile.businessName || 'Apex Retail & Traders');
+                    toast.success('Sample data loaded successfully! Refreshing...');
+                    setTimeout(() => window.location.reload(), 1200);
+                  } catch (err) {
+                    console.error(err);
+                    toast.error('Failed to populate mock data');
+                  } finally {
+                    setBackupLoading(false);
+                  }
+                }}
+                disabled={backupLoading}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs shadow-sm transition-colors"
+              >
+                {backupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Populate Sample Business Data
+              </button>
             </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              Instantly fill your account with demo products, sales, purchases, bank accounts, expenses, godowns, and orders to test all features.
-            </p>
-
-            <button
-              onClick={async () => {
-                if (!window.confirm('Populate rich sample business dataset in your current company account?')) return;
-                try {
-                  setBackupLoading(true);
-                  await seedMockData(companyId, profile.businessName || 'Apex Retail & Traders');
-                  toast.success('Sample data loaded successfully! Refreshing...');
-                  setTimeout(() => window.location.reload(), 1200);
-                } catch (err) {
-                  console.error(err);
-                  toast.error('Failed to populate mock data');
-                } finally {
-                  setBackupLoading(false);
-                }
-              }}
-              disabled={backupLoading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs shadow-sm transition-colors"
-            >
-              {backupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              Populate Sample Business Data
-            </button>
-          </div>
+          )}
 
           {/* Export */}
           <div className="card space-y-4 p-6">
