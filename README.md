@@ -13,7 +13,7 @@
 [![GST Ready](https://img.shields.io/badge/GST-Compliance-059669)](https://www.gst.gov.in/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[Features](#-key-features) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start) • [Mock Data](#-1-click-sample-data) • [Documentation](#-documentation)
+[Features](#-key-features) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start) • [Documentation](#-documentation)
 
 </div>
 
@@ -149,23 +149,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ```bash
 npm run build
 ```
-
----
-
-## 🪄 1-Click Sample Data *(Demo Administrator Only)*
-
-Coreventory includes an integrated **1-Click Mock Data Loader** designed for instant evaluation and demo presentations. To protect production operational records from accidental overwrites, this tool is restricted exclusively to the authorized demo account (`kakashigod777@gmail.com`):
-
-1. Log into the platform using `kakashigod777@gmail.com`.
-2. Click the **"Fill Mock Data"** button on the top right of the **Dashboard** (or navigate to **Settings > Backup & Restore**).
-3. The platform automatically seeds **15 Firestore collections** with realistic Indian wholesale/retail business data:
-   - 8 Products (with HSN codes, batches, serials, and low-stock alerts)
-   - 4 Customers with GSTINs and party balances
-   - 2 Verified Suppliers
-   - Sales Invoices, POS Bills, and Delivery Challans
-   - Bank Accounts, Cash Book entries, and Contra transfers
-   - Expenses with GST Input Tax Credit categorization
-   - Promotional discount coupons and web orders
 
 ---
 
