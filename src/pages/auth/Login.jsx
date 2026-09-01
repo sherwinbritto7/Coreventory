@@ -53,7 +53,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      toast.success('Welcome back to Coreventory');
+      toast.success('Welcome to Coreventory');
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
@@ -64,12 +64,6 @@ const Login = () => {
         toast(msg, {
           icon: '⚠️',
           id: 'auth-invalid',
-          style: {
-            borderRadius: '10px',
-            background: '#18181b',
-            color: '#fafafa',
-            fontSize: '12px',
-          },
         });
       } else {
         const msg = getAuthErrorMessage(error);

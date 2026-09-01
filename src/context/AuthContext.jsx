@@ -59,13 +59,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Logged in successfully');
-    } catch (error) {
-      toast.error(error.message);
-      throw error;
-    }
+    return await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {

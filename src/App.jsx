@@ -84,13 +84,21 @@ function App() {
       <Router>
         <Toaster 
           position="top-right"
+          gutter={8}
           toastOptions={{
-            style: {
-              borderRadius: '16px',
-              background: '#fff',
-              color: '#1e293b',
-              padding: '16px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            duration: 3500,
+            className: '!bg-white dark:!bg-[#121215] !text-slate-900 dark:!text-zinc-100 !border !border-slate-200/90 dark:!border-zinc-800 !rounded-xl !shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:!shadow-[0_4px_20px_rgba(0,0,0,0.4)] !text-xs !font-medium !py-2.5 !px-3.5',
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#ffffff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#f43f5e',
+                secondary: '#ffffff',
+              },
             },
           }} 
         />
