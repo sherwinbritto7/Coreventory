@@ -44,11 +44,16 @@ const SalesEntry = () => {
   const [paymentMode, setPaymentMode] = useState("Cash");
   const customerRef = useRef(null);
   const invoicePreviewRef = useRef(null);
+  const tableRef = useRef(null);
+  const [activeProductDropdown, setActiveProductDropdown] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (customerRef.current && !customerRef.current.contains(event.target)) {
         setShowCustSuggestions(false);
+      }
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setActiveProductDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -188,21 +193,25 @@ const SalesEntry = () => {
 
   const selectProduct = (index, product) => {
     const newItems = [...items];
+    const unitPrice = parseFloat(product.sellingPrice ?? product.price ?? 0);
+    const gstRate = parseFloat(product.gstPercent ?? product.gst ?? product.tax ?? 18);
     newItems[index] = {
       ...newItems[index],
       productId: product.id,
       name: product.name,
       sku: product.sku || "",
       hsn: product.hsn || "",
-      price: parseFloat(product.sellingPrice || 0),
-      tax: parseFloat(product.gstPercent || 18),
+      price: unitPrice,
+      tax: gstRate,
       unit: product.unit || "pcs",
       qty: newItems[index].qty || 1,
       discount: newItems[index].discount || 0,
+      stock: product.stock || 0,
       showSearch: false,
     };
     newItems[index].total = calculateItemTotal(newItems[index]);
     setItems(newItems);
+    setActiveProductDropdown(null);
   };
 
   const addRow = () => {
@@ -763,8 +772,8 @@ const SalesEntry = () => {
       </div>
 
       {/* Line Items Table Card */}
-      <div className="card p-0 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/40">
+      <div ref={tableRef} className="card p-0 overflow-visible relative z-20">
+        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/40 rounded-t-xl">
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-slate-500" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
@@ -779,12 +788,12 @@ const SalesEntry = () => {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse min-w-[760px]">
+        <div className="overflow-visible">
+          <table className="w-full text-xs text-left border-collapse">
             <thead className="bg-slate-50 dark:bg-zinc-900/80 text-slate-500 dark:text-zinc-400 border-b border-slate-200/80 dark:border-zinc-800">
               <tr>
                 <th className="w-10 px-3 py-2.5 text-center font-semibold">#</th>
-                <th className="px-3 py-2.5 font-semibold">Product / Item Description</th>
+                <th className="px-3 py-2.5 font-semibold min-w-[240px]">Product / Item Description</th>
                 <th className="w-24 px-2 py-2.5 text-center font-semibold">Qty</th>
                 <th className="w-20 px-2 py-2.5 text-center font-semibold">Unit</th>
                 <th className="w-28 px-2 py-2.5 text-right font-semibold">Rate (₹)</th>
@@ -804,55 +813,103 @@ const SalesEntry = () => {
 
                   {/* Product Search & Dropdown */}
                   <td className="px-3 py-2.5 relative">
-                    <input
-                      type="text"
-                      placeholder="Type product name or scan barcode..."
-                      className="input-field font-medium"
-                      value={item.name}
-                      onChange={(e) => {
-                        updateItem(index, "name", e.target.value);
-                        updateItem(index, "showSearch", e.target.value.length > 0);
-                      }}
-                      onFocus={() => item.name && updateItem(index, "showSearch", true)}
-                    />
+                    <div className="space-y-1">
+                      <input
+                        type="text"
+                        placeholder="Type product name, SKU, or scan barcode..."
+                        className={cn(
+                          "input-field font-medium",
+                          item.productId && "border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/20 dark:bg-emerald-950/10"
+                        )}
+                        value={item.name}
+                        onChange={(e) => {
+                          updateItem(index, "name", e.target.value);
+                          setActiveProductDropdown(index);
+                        }}
+                        onFocus={() => setActiveProductDropdown(index)}
+                      />
+                      {item.productId && (
+                        <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle className="w-3 h-3 text-emerald-500" />
+                          <span className="font-mono">Linked: {item.sku ? `SKU ${item.sku}` : "Catalog Item"}</span>
+                          {item.hsn && <span className="text-slate-400 dark:text-zinc-500">&middot; HSN: {item.hsn}</span>}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Product Suggestion Dropdown */}
-                    {item.showSearch && item.name.length > 0 && (
-                      <div className="absolute top-full left-3 right-3 mt-1 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800">
-                        {allProducts
-                          .filter(
-                            (p) =>
-                              p.name.toLowerCase().includes(item.name.toLowerCase()) ||
-                              (p.sku && p.sku.toLowerCase().includes(item.name.toLowerCase())) ||
-                              (p.barcode && p.barcode.includes(item.name))
-                          )
-                          .map((prod) => (
+                    {activeProductDropdown === index && (
+                      <div className="absolute top-full left-3 w-[380px] sm:w-[460px] max-w-[90vw] mt-1.5 bg-white dark:bg-[#18181b] border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] z-[999] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800/80">
+                        {(() => {
+                          const queryText = (item.name || "").trim().toLowerCase();
+                          const filtered = allProducts.filter((p) => {
+                            if (!queryText) return true;
+                            const matchName = p.name?.toLowerCase().includes(queryText);
+                            const matchSku = p.sku?.toLowerCase().includes(queryText);
+                            const matchBarcode = p.barcode?.includes(queryText);
+                            const matchHsn = p.hsn?.toLowerCase().includes(queryText);
+                            const matchCategory = p.category?.toLowerCase().includes(queryText);
+                            return matchName || matchSku || matchBarcode || matchHsn || matchCategory;
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-3 text-xs text-slate-500 dark:text-zinc-400 text-center">
+                                <p className="font-medium text-slate-700 dark:text-zinc-300">No catalog match found</p>
+                                <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">
+                                  Custom line item (manual rate & tax)
+                                </p>
+                              </div>
+                            );
+                          }
+
+                          return filtered.slice(0, 20).map((prod) => (
                             <button
                               key={prod.id}
                               type="button"
-                              className="w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center justify-between text-xs"
-                              onClick={() => selectProduct(index, prod)}
+                              className="w-full px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-zinc-800/70 transition-colors flex items-center justify-between text-xs group"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectProduct(index, prod);
+                              }}
                             >
-                              <div>
-                                <p className="font-semibold text-slate-800 dark:text-zinc-200">{prod.name}</p>
-                                <p className="text-[10px] text-slate-400 dark:text-zinc-500">
-                                  SKU: {prod.sku || "N/A"} &middot; Price: {formatCurrency(prod.sellingPrice || 0)}
+                              <div className="space-y-0.5 max-w-[65%]">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                                    {prod.name}
+                                  </p>
+                                  {prod.category && (
+                                    <span className="text-[9px] px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 rounded">
+                                      {prod.category}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono flex items-center gap-2">
+                                  <span>SKU: {prod.sku || "N/A"}</span>
+                                  {prod.hsn && <span>HSN: {prod.hsn}</span>}
                                 </p>
                               </div>
-                              <span className={cn("badge text-[9px]", prod.stock > 0 ? "badge-success" : "badge-danger")}>
-                                Stock: {prod.stock || 0} {prod.unit || "pcs"}
-                              </span>
+                              <div className="text-right space-y-0.5">
+                                <p className="font-mono font-bold text-slate-900 dark:text-zinc-100">
+                                  {formatCurrency(prod.sellingPrice || prod.price || 0)}
+                                </p>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
+                                    {prod.gstPercent ?? prod.gst ?? 18}% GST
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "badge text-[9px] px-1.5 py-0.2",
+                                      (prod.stock || 0) > 0 ? "badge-success" : "badge-danger"
+                                    )}
+                                  >
+                                    {(prod.stock || 0) > 0 ? `${prod.stock} ${prod.unit || "pcs"}` : "Out of stock"}
+                                  </span>
+                                </div>
+                              </div>
                             </button>
-                          ))}
-                        {allProducts.filter(
-                          (p) =>
-                            p.name.toLowerCase().includes(item.name.toLowerCase()) ||
-                            (p.sku && p.sku.toLowerCase().includes(item.name.toLowerCase()))
-                        ).length === 0 && (
-                          <div className="px-3 py-2 text-xs text-slate-400 text-center">
-                            Custom item (not linked to inventory)
-                          </div>
-                        )}
+                          ));
+                        })()}
                       </div>
                     )}
                   </td>
